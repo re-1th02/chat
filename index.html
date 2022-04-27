@@ -111,7 +111,7 @@
 					var curr = mesg.msglist.length-1;
 					if(msgcount==0){
 						var item = document.createElement('li');
-						item.innerHTML = '<div ><header style="opacity: 50%; text-align: right;">'+(mesg.msglist[curr].index<0 ? "~" : mesg.nam[mesg.msglist[curr].index])+'</header><p1>'+mesg.msglist[curr].text+'</p1></div>';
+						item.innerHTML = '<div ><header style="opacity: 50%; text-align: right;">'+(mesg.msglist[curr].index<0 ? "~" : ("~"+mesg.nam[mesg.msglist[curr].index]))+'</header><p1>'+mesg.msglist[curr].text+'</p1></div>';
 						curr--;
 						messages.appendChild(item);
 					}
@@ -119,7 +119,7 @@
 						var msg = mesg.msglist[i];
 						console.log("msg index : ", msg.index);
 						var item = document.createElement('li');
-						item.innerHTML = '<div ><header style="opacity: 75%; text-align: right;">'+(msg.index<0 ? "~" : mesg.nam[msg.index])+'</header><p1>'+msg.text+'</p1></div>';
+						item.innerHTML = '<div ><header style="opacity: 75%; text-align: right;">'+(msg.index<0 ? "~" : ("~"+mesg.nam[msg.index]))+'</header><p1>'+msg.text+'</p1></div>';
 						messages.insertBefore(item, messages.children[0]);
 						if(msg.index>=0 && msg.index == idnum){
 							console.log("entered!!");

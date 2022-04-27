@@ -18,7 +18,7 @@ io.on('connection', (socket) => {
 
 	socket.on('chat message', msg => {
 		messages1.push(msg);
-		io.emit('chat message', {nam : (msg.index<0 ? "~" : IndexToName[msg.index]), text : msg.text});
+		io.emit('chat message', {nam : (msg.index<0 ? "~" : ("~"+IndexToName[msg.index])), text : msg.text});
 		io.to(socket.id).emit('sent', "");
 	});
 
