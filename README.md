@@ -12,5 +12,5 @@
     5. The user's messages are black-backgrounded.
 
 
-[https://github.com/socketio/chat-example](https://github.com/socketio/chat-example)
+[https://github.com/socketio/chat-example](https://github.com/socketio/chat-example)<br />
 [https://socket.io/](https://socket.io/)
