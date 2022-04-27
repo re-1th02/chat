@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Socket.IO chat</title>
+		<style>
+		body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+		#form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; display: flex; height: 3rem; width: 100%; margin: 0 0.5rem; box-sizing: border-box; backdrop-filter: blur(10px); bottom: 0; left: 0; right: 0; position: fixed; }
+		#input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem;}
+		#input:focus { outline: none; }
+		#nam, #id {width: 100%;height: 2rem; margin: 1%;}
+		#form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+		#create, #access { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; height: 2rem;}
+		#messages { list-style-type: none; margin: 0; padding: 0; }
+		#messages > li { margin: 1%; padding: 0.5rem 1rem; width: fit-content; max-width: 80%; overflow-wrap:break-word; border-radius: 0.7rem;}
+		#messages > li { background: #efefef; justify-content: flex-end;}
+		#l { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+		</style>
+	</head>
+	<body>
+		<header style="position: fixed; ">
+		<nav>
+		</nav>
+	</header>
+	<div >
+			<div style=" width: 60%;  padding: 20px; border: 10px solid black; display: block; float: left; margin: 2% ; bottom: 0; left: 0; right: 0;">
+				<ul id="messages">
+				</ul>
+				<form id="form" action="">
+					<input id="input" autocomplete="off" />
+					<button>Send</button>
+				</form>
+			</div>
+			<div style="width: 20%;  position: fixed; right: 5%; ">
+				<div >
+					<button id = "l" onclick="load()" style="height: 3rem; ">Load Previous Msgs</button>
+				</div>
+				<div>
+					<input placeholder="name" id = "nam" autocomplete="on" />
+					<input placeholder="ID"   id = "id"   autocomplete="on"/>
+					<button onclick="create()" id="create">Create User</button>
+					<button onclick="access()" id = "access">Access User</button>
+					<label id = "error" style="color: red;"></label>
+				</div>
+			</div>
+		</div>
+		
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+			var socket = io();
+			var msgcount = 0;
+
+			var messages = document.getElementById('messages');
+			var form = document.getElementById('form');
+			var input = document.getElementById('input');
+			var nam = document.getElementById('nam');
+			var id = document.getElementById('id');
+			var err = document.getElementById('error');
+			var namey = "~";
+			var idnum = -1;
+			var loadAcess = true;
+
+			function create(){
+				err.innerHTML = "";
+				socket.emit('create user', { nam : nam.value, id : id.value} );
+			}
+
+			socket.on('user exists', msg => {
+				err.innerHTML = "ID already exists! use different one";
+			});
+
+			function access(){
+				err.innerHTML = "";
+				socket.emit('access user', {nam : nam.value, id : id.value});
+			}
+
+			socket.on('no user exists', msg => {
+				err.innerHTML = "NO match exists for the combination of nam and ID!!";
+			});
+
+			socket.on('logged in', msg => {
+				console.log('user is here!!');
+				idnum = msg;
+				namey = nam.value;
+			});
+
+			form.addEventListener('submit', function(e) {
+				console.log("index.html : addEventListener");
+				e.preventDefault();
+				if (input.value) {
+				socket.emit('chat message', {index : idnum, text : input.value});
+				input.value = '';
+				}
+			});
+
+			function load(){
+				console.log('clicked load');
+				socket.emit('load message', '');
+			}
+
+			socket.on('load message', function(mesg){
+				for(let i=0; i<msgcount; i++){
+					mesg.msglist.pop();
+				}
+				while(messages.children.length>msgcount){
+					messages.removeChild(messages.children[0]);
+					console.log(messages.children.length);
+				}
+				console.log(msgcount, messages.children.length);
+				if(mesg.msglist.length>0){
+					var curr = mesg.msglist.length-1;
+					if(msgcount==0){
+						var item = document.createElement('li');
+						item.innerHTML = '<div ><header style="opacity: 50%; text-align: right;">'+(mesg.msglist[curr].index<0 ? "~" : mesg.nam[mesg.msglist[curr].index])+'</header><p1>'+mesg.msglist[curr].text+'</p1></div>';
+						curr--;
+						messages.appendChild(item);
+					}
+					for(let i=curr; i>=0; i--){
+						var msg = mesg.msglist[i];
+						console.log("msg index : ", msg.index);
+						var item = document.createElement('li');
+						item.innerHTML = '<div ><header style="opacity: 75%; text-align: right;">'+(msg.index<0 ? "~" : mesg.nam[msg.index])+'</header><p1>'+msg.text+'</p1></div>';
+						messages.insertBefore(item, messages.children[0]);
+						if(msg.index>=0 && msg.index == idnum){
+							console.log("entered!!");
+							messages.children[0].style = "background : rgba(0,0,0,0.8); background color : white;";
+						}
+					}
+					window.scrollTo(0, document.body.scrollHeight);
+				}
+			});
+
+			socket.on('sent', (msg) => {
+				messages.lastChild.style = "background : rgba(0,0,0,0.8); color : white;";
+			});
+
+			socket.on('chat message', function(msg) {
+				var item = document.createElement('li');
+				item.innerHTML = '<div ><header style="opacity: 50%; text-align: right;">'+msg.nam+'</header><p1>'+msg.text+'</p1></div>';
+				messages.appendChild(item);
+				msgcount++;
+				window.scrollTo(0, document.body.scrollHeight);
+			});
+		</script>
+	</body>
+</html>
